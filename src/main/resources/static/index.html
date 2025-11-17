@@ -2,19 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>AI ERP Assistant</title>
-
-    <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
 
     <!-- Markdown + 3D Assets -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
 
     <!-- Custom Styles -->
@@ -22,35 +19,26 @@
 </head>
 <body>
 
-<!-- Animated Background -->
-<div class="cyber-grid"></div>
+<!-- Floating Background Glow -->
 <div class="glow-bg"></div>
 <div class="gradient-overlay"></div>
-<div class="particle-field" id="particleField"></div>
 
 <!-- Header -->
 <header>
-    <div class="header-brand">
-        <div class="logo-icon">
-            <i class="fa-solid fa-robot"></i>
-        </div>
-        <h2>
-            <span class="text-gradient">AI ERP Assistant</span>
-            <span class="status-indicator"></span>
-        </h2>
-    </div>
+    <h2>
+        <i class="fa-solid fa-robot"></i>
+        <span>Let Me Assist You!</span>
+    </h2>
     <div class="header-actions">
-        <button class="btn-glass" onclick="location.reload()" aria-label="Refresh">
-            <i class="fa-solid fa-rotate-right"></i>
-            <span class="btn-text">Refresh</span>
+        <button style="color: White;" onclick="location.reload()">Refresh</button>
+        <button id="historyBtn" title="Chat History">
+            <i class="fa-solid fa-clock-rotate-left"></i> History
         </button>
-        <button id="historyBtn" class="btn-glass" title="Chat History" aria-label="Chat History">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            <span class="btn-text">History</span>
+        <button id="themeToggle" title="Toggle Dark Mode">
+            <i class="fa-solid fa-user-tie"></i>
         </button>
-        <button id="themeToggle" class="btn-glass" title="Toggle Theme" aria-label="Toggle Theme">
-            <i class="fa-solid fa-moon"></i>
-        </button>
+
+
     </div>
 </header>
 
@@ -58,30 +46,21 @@
 <aside id="SideBar">
     <div class="sidebar-header">
         <h3><i class="fa-solid fa-comments"></i> Chat History</h3>
-        <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
     </div>
 
-    <div class="sidebar-controls">
-        <select id="sortHistory" class="glass-select">
-            <option value="date">📅 Sort by Date</option>
-            <option value="topic">📂 Sort by Topic</option>
-        </select>
 
-        <div class="search-wrapper">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="searchHistory" placeholder="Search history..." />
-        </div>
-    </div>
+    <select id="sortHistory">
+        <option value="date">📅 Sort by Date</option>
+        <option value="topic">📂 Sort by Topic</option>
+    </select>
+
+    <input type="text" id="searchHistory" placeholder="🔍 Search history..." />
 
     <div id="historyList" class="fancy-scroll">
         <!-- Chat history dynamically injected -->
     </div>
 
-    <button id="clearHistory" class="btn-danger">
-        <i class="fa-solid fa-trash"></i> Clear All
-    </button>
+    <button id="clearHistory"><i class="fa-solid fa-trash"></i> Clear All</button>
 </aside>
 
 <!-- Main Content -->
@@ -89,69 +68,58 @@
     <div class="ai-message welcome-message fade-in">
         <div class="ai-avatar">
             <i class="fa-solid fa-circle-user"></i>
-            <span class="avatar-pulse"></span>
         </div>
 
         <div class="ai-text">
-            <strong class="welcome-title">Hello 👋</strong>
-            <p>I'm your AI ERP Assistant — ready to simplify your work. Try asking about reports, users, or real-time stats.</p>
-            <div class="quick-actions">
-                <button class="quick-btn" data-prompt="Show me the dashboard">
-                    <i class="fa-solid fa-chart-line"></i> Dashboard
-                </button>
-                <button class="quick-btn" data-prompt="Generate a report">
-                    <i class="fa-solid fa-file-alt"></i> Reports
-                </button>
-                <button class="quick-btn" data-prompt="User management">
-                    <i class="fa-solid fa-users"></i> Users
-                </button>
-            </div>
+            <strong>Hello 👋</strong><br>
+            I'm your AI ERP Assistant — ready to simplify your work. Try asking about reports, users, or real-time stats.
         </div>
     </div>
 
-    <!-- DFD Container -->
+    <!-- 💡 Add this container below -->
     <div id="myDfdContainer" class="dfd-container"></div>
+<!--    <div id="dfdToolbar" style="text-align:center; margin-top:10px;">-->
+<!--        <button id="zoomInBtn">🔍 + Zoom In</button>-->
+<!--        <button id="zoomOutBtn">🔎 - Zoom Out</button>-->
+<!--        <button id="copyDfdBtn">📋 Copy DFD</button>-->
+<!--    </div>-->
+
+
+
+<!--    <div id="ai-avatar-container" style="position: fixed; bottom: 80px; right: 40px; width: 200px; height: 200px; z-index: 9999;">-->
+<!--        <canvas id="ai-avatar-canvas" style="width: 100%; height: 100%;"></canvas>-->
+<!--        <div id="ai-avatar-text" style="display: none; color: white; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; margin-top: 4px; text-align: center;"></div>-->
+<!--        <button id="ai-avatar-toggle">Hide</button>-->
+<!--        <button id="ai-avatar-talk">Voice</button>-->
+<!--        <input id="ai-input" placeholder="Ask me..." />-->
+<!--        <button id="ai-send">Send</button>-->
+<!--    </div>-->
+
 </main>
+
 
 <!-- Input Area -->
 <div id="inputArea">
     <div class="file-section">
-        <label id="fileLabel" class="file-label">
-            <i class="fa-solid fa-paperclip"></i>
-            <span class="label-text">Attach</span>
-        </label>
-        <button id="AddFiles" aria-label="Add files">
-            <i class="fa-solid fa-plus"></i>
-        </button>
-        <input type="file" id="fileInput" style="display:none" multiple accept="image/*,.pdf,.doc,.docx,.txt" />
+        <label id="fileLabel"><i class="fa-solid fa-paperclip"></i> Attach</label>
+        <button id="AddFiles"><i class="fa-solid fa-plus"></i></button>
+        <input type="file" id="fileInput" style="display:none" />
     </div>
 
-    <button id="micBtn" class="mic-btn" title="Voice Input" aria-label="Voice Input">
+    <button id="micBtn" title="Speak">
         <i class="fa-solid fa-microphone"></i>
-        <span class="mic-pulse"></span>
     </button>
 
-    <div class="input-wrapper">
-        <input
-                type="text"
-                id="userInput"
-                placeholder="Ask something to AI Assistant..."
-                aria-label="User Input"
-        />
-        <div class="input-glow"></div>
-    </div>
+    <input
+            type="text"
+            id="userInput"
+            placeholder="Ask something to AI Assistant..."
+            aria-label="User Input"
+    />
 
-    <button onclick="sendToAI()" title="Send Message" class="send-btn" aria-label="Send Message">
+    <button onclick="sendToAI()" title="Send Message" class="send-btn pulse">
         <i class="fa-solid fa-paper-plane"></i>
     </button>
-</div>
-
-<!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
-    <div class="loader-container">
-        <div class="cyber-loader"></div>
-        <p>Processing...</p>
-    </div>
 </div>
 
 <!-- Scripts -->
