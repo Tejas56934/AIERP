@@ -1,0 +1,52 @@
+#aiAvatarContainer {
+  position: fixed;
+  bottom: 60px;
+  right: 30px;
+  width: 250px;
+  height: 350px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.4s ease-in-out;
+}
+
+#aiAvatarCanvas {
+  width: 220px;
+  height: 300px;
+  background: transparent;
+  cursor: grab;
+}
+
+#aiSpeechBox {
+  font-family: 'Poppins', sans-serif;
+  background: rgba(25, 25, 25, 0.8);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-size: 13px;
+  max-width: 220px;
+  box-shadow: 0 0 10px rgba(0,255,255,0.3);
+  transition: opacity 0.4s ease-in-out;
+}
+
+#toggleAvatar {
+  background: linear-gradient(90deg, #007bff, #00e0ff);
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+#toggleAvatar:hover {
+  background: linear-gradient(90deg, #00e0ff, #007bff);
+}
+
+.hidden {
+  opacity: 0;
+  transform: translateX(200%);
+}
