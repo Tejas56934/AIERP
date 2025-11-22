@@ -1,129 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>AI ERP Assistant</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI ERP Assistant | Intelligent Enterprise Solution</title>
 
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Markdown + 3D Assets -->
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Mermaid for DFD -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+    <!-- Marked for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
-
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<!-- Floating Background Glow -->
-<div class="glow-bg"></div>
-<div class="gradient-overlay"></div>
+<!-- Animated Background Elements -->
+<div class="bg-grid"></div>
+<div class="floating-orb orb-1"></div>
+<div class="floating-orb orb-2"></div>
+<div class="floating-orb orb-3"></div>
+<div class="scan-line"></div>
 
 <!-- Header -->
 <header>
-    <h2>
-        <i class="fa-solid fa-robot"></i>
-        <span>Let Me Assist You!</span>
-    </h2>
+    <div class="logo">
+        <div class="logo-icon">
+            <i class="fa-solid fa-brain"></i>
+            <div class="logo-pulse"></div>
+        </div>
+        <div class="logo-text">
+            <h1>AI ERP Assistant</h1>
+            <span class="status">
+                    <span class="status-dot"></span>
+                    Online & Ready
+                </span>
+        </div>
+    </div>
+
+    <div class="header-center">
+        <div class="search-bar">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="globalSearch" placeholder="Quick search... (Ctrl+K)">
+            <kbd>⌘K</kbd>
+        </div>
+    </div>
+
     <div class="header-actions">
-        <button style="color: White;" onclick="location.reload()">Refresh</button>
-        <button id="historyBtn" title="Chat History">
-            <i class="fa-solid fa-clock-rotate-left"></i> History
+        <button class="header-btn" id="refreshBtn" title="Refresh">
+            <i class="fa-solid fa-rotate"></i>
         </button>
-        <button id="themeToggle" title="Toggle Dark Mode">
-            <i class="fa-solid fa-user-tie"></i>
+        <button class="header-btn" id="historyBtn" title="Chat History">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span class="btn-label">History</span>
         </button>
-
-
+        <button class="header-btn" id="settingsBtn" title="Settings">
+            <i class="fa-solid fa-gear"></i>
+        </button>
+        <button class="header-btn" id="themeToggle" title="Toggle Theme">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+        <div class="user-avatar">
+            <i class="fa-solid fa-user"></i>
+        </div>
     </div>
 </header>
 
 <!-- Sidebar -->
 <aside id="SideBar">
     <div class="sidebar-header">
-        <h3><i class="fa-solid fa-comments"></i> Chat History</h3>
+        <h3><i class="fa-solid fa-messages"></i> Chat History</h3>
+        <button class="close-sidebar" id="closeSidebar">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
 
-
-    <select id="sortHistory">
-        <option value="date">📅 Sort by Date</option>
-        <option value="topic">📂 Sort by Topic</option>
-    </select>
-
-    <input type="text" id="searchHistory" placeholder="🔍 Search history..." />
-
-    <div id="historyList" class="fancy-scroll">
-        <!-- Chat history dynamically injected -->
+    <div class="sidebar-controls">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="searchHistory" class="sidebar-input" placeholder="Search conversations...">
+        </div>
+        <select id="sortHistory" class="sidebar-select">
+            <option value="date">📅 Sort by Date</option>
+            <option value="topic">📂 Sort by Topic</option>
+        </select>
     </div>
 
-    <button id="clearHistory"><i class="fa-solid fa-trash"></i> Clear All</button>
+    <div id="historyList" class="history-list"></div>
+
+    <div class="sidebar-footer">
+        <button id="exportHistory" class="sidebar-action-btn">
+            <i class="fa-solid fa-download"></i> Export
+        </button>
+        <button id="clearHistory" class="sidebar-action-btn danger">
+            <i class="fa-solid fa-trash"></i> Clear All
+        </button>
+    </div>
 </aside>
 
-<!-- Main Content -->
-<main id="chatContainer" class="fancy-scroll">
-    <div class="ai-message welcome-message fade-in">
-        <div class="ai-avatar">
-            <i class="fa-solid fa-circle-user"></i>
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-gear"></i> Settings</h3>
+            <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
         </div>
+        <div class="modal-body">
+            <div class="setting-group">
+                <label>Voice Language</label>
+                <select id="voiceLang">
+                    <option value="en-IN">English (India)</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Speech Rate</label>
+                <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <div class="setting-group">
+                <label>Auto-speak Responses</label>
+                <label class="toggle">
+                    <input type="checkbox" id="autoSpeak" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="setting-group">
+                <label>Show DFD Diagrams</label>
+                <label class="toggle">
+                    <input type="checkbox" id="showDFD" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <div class="ai-text">
-            <strong>Hello 👋</strong><br>
-            I'm your AI ERP Assistant — ready to simplify your work. Try asking about reports, users, or real-time stats.
+<!-- Main Chat Container -->
+<main id="chatContainer">
+    <!-- Welcome Card -->
+    <div class="welcome-card" id="welcomeCard">
+        <div class="welcome-glow"></div>
+        <div class="welcome-content">
+            <div class="welcome-icon">
+                <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <h2>Welcome to AI ERP Assistant</h2>
+            <p>Your intelligent companion for enterprise resource planning. Ask me about reports, analytics, workflows, or any ERP-related queries.</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fa-solid fa-chart-mixed"></i>
+                    <span>Real-time Analytics</span>
+                </div>
+                <div class="feature-card">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>Auto DFD Generation</span>
+                </div>
+                <div class="feature-card">
+                    <i class="fa-solid fa-microphone"></i>
+                    <span>Voice Commands</span>
+                </div>
+                <div class="feature-card">
+                    <i class="fa-solid fa-file-export"></i>
+                    <span>Export Reports</span>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <span class="quick-label">Quick Actions:</span>
+                <button class="quick-btn" data-query="Show me sales dashboard">
+                    <i class="fa-solid fa-chart-line"></i> Sales Dashboard
+                </button>
+                <button class="quick-btn" data-query="Generate inventory report">
+                    <i class="fa-solid fa-boxes-stacked"></i> Inventory Report
+                </button>
+                <button class="quick-btn" data-query="How to add a new user in ERP system">
+                    <i class="fa-solid fa-user-plus"></i> Add User Guide
+                </button>
+                <button class="quick-btn" data-query="Show order processing workflow diagram">
+                    <i class="fa-solid fa-diagram-project"></i> Workflow DFD
+                </button>
+                <button class="quick-btn" data-query="What are today's pending tasks">
+                    <i class="fa-solid fa-list-check"></i> Pending Tasks
+                </button>
+                <button class="quick-btn" data-query="Show employee attendance report">
+                    <i class="fa-solid fa-user-clock"></i> Attendance
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- 💡 Add this container below -->
+    <!-- DFD Container -->
     <div id="myDfdContainer" class="dfd-container"></div>
-<!--    <div id="dfdToolbar" style="text-align:center; margin-top:10px;">-->
-<!--        <button id="zoomInBtn">🔍 + Zoom In</button>-->
-<!--        <button id="zoomOutBtn">🔎 - Zoom Out</button>-->
-<!--        <button id="copyDfdBtn">📋 Copy DFD</button>-->
-<!--    </div>-->
-
-
-
-<!--    <div id="ai-avatar-container" style="position: fixed; bottom: 80px; right: 40px; width: 200px; height: 200px; z-index: 9999;">-->
-<!--        <canvas id="ai-avatar-canvas" style="width: 100%; height: 100%;"></canvas>-->
-<!--        <div id="ai-avatar-text" style="display: none; color: white; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; margin-top: 4px; text-align: center;"></div>-->
-<!--        <button id="ai-avatar-toggle">Hide</button>-->
-<!--        <button id="ai-avatar-talk">Voice</button>-->
-<!--        <input id="ai-input" placeholder="Ask me..." />-->
-<!--        <button id="ai-send">Send</button>-->
-<!--    </div>-->
-
 </main>
-
 
 <!-- Input Area -->
 <div id="inputArea">
-    <div class="file-section">
-        <label id="fileLabel"><i class="fa-solid fa-paperclip"></i> Attach</label>
-        <button id="AddFiles"><i class="fa-solid fa-plus"></i></button>
-        <input type="file" id="fileInput" style="display:none" />
+    <!-- File Indicator -->
+    <div id="fileIndicator" class="file-indicator" style="display: none;">
+        <i class="fa-solid fa-paperclip"></i>
+        <span id="fileName"></span>
+        <button id="removeFile" class="remove-file">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
 
-    <button id="micBtn" title="Speak">
-        <i class="fa-solid fa-microphone"></i>
-    </button>
+    <div class="input-container">
+        <div class="input-wrapper">
+            <button class="input-btn" id="AddFiles" title="Attach file (Ctrl+U)">
+                <i class="fa-solid fa-paperclip"></i>
+            </button>
 
-    <input
-            type="text"
-            id="userInput"
-            placeholder="Ask something to AI Assistant..."
-            aria-label="User Input"
-    />
+            <input type="text" id="userInput" placeholder="Ask anything about your ERP system..." autocomplete="off">
 
-    <button onclick="sendToAI()" title="Send Message" class="send-btn pulse">
-        <i class="fa-solid fa-paper-plane"></i>
-    </button>
+            <div class="input-actions">
+                <button class="input-btn" id="emojiBtn" title="Emoji">
+                    <i class="fa-solid fa-face-smile"></i>
+                </button>
+                <button class="input-btn" id="micBtn" title="Voice input (Ctrl+M)">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+            </div>
+        </div>
+
+        <button class="send-btn" id="sendBtn" title="Send message (Enter)">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+
+    <input type="file" id="fileInput" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg">
 </div>
 
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
 <!-- Scripts -->
-<script src="Script.js" defer></script>
-<script type="module" src="/JS/avatar.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

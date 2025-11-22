@@ -1,134 +1,155 @@
-// ✅ ===== Mermaid-based Responsive DFD Generator =====
+// ============================================
+// AI ERP ASSISTANT - COMPLETE JAVASCRIPT
+// ============================================
 
-// 1️⃣ Extract steps
+// ===== MERMAID DFD GENERATOR (PRESERVED LOGIC) =====
+
 function extractDFDSteps(aiText) {
-  const steps = [];
-  if (Array.isArray(aiText)) return aiText;
-  if (typeof aiText !== "string" || aiText.trim() === "") return ["No Data Found"];
+    const steps = [];
+    if (Array.isArray(aiText)) return aiText;
+    if (typeof aiText !== "string" || aiText.trim() === "") return ["No Data Found"];
 
-  const boldMatches = [
-    ...aiText.matchAll(/<b>(.*?)<\/b>/gi),
-    ...aiText.matchAll(/\*\*(.*?)\*\*/g)
-  ];
+    const boldMatches = [
+        ...aiText.matchAll(/<b>(.*?)<\/b>/gi),
+        ...aiText.matchAll(/\*\*(.*?)\*\*/g)
+    ];
 
-  if (boldMatches.length > 0) {
-    for (const match of boldMatches) {
-      const step = match[1].trim();
-      if (step) steps.push(step);
+    if (boldMatches.length > 0) {
+        for (const match of boldMatches) {
+            const step = match[1].trim();
+            if (step) steps.push(step);
+        }
+    } else {
+        const sentences = aiText.split(/[.!?]/).map(s => s.trim()).filter(Boolean);
+        for (let s of sentences) {
+            const match = s.match(/(login to [\w\s]+|open [\w\s]+|navigate to [\w\s]+|access [\w\s]+|select [\w\s]+|choose [\w\s]+|click [\w\s]+)/i);
+            if (match) steps.push(capitalize(match[0]));
+        }
     }
-  } else {
-    const sentences = aiText.split(/[.!?]/).map(s => s.trim()).filter(Boolean);
-    for (let s of sentences) {
-      const match = s.match(/(login to [\w\s]+|open [\w\s]+|navigate to [\w\s]+|access [\w\s]+|select [\w\s]+|choose [\w\s]+|click [\w\s]+)/i);
-      if (match) steps.push(capitalize(match[0]));
-    }
-  }
 
-  return [...new Set(steps)];
+    return [...new Set(steps)];
 }
 
-function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 function nodeId(i, text) {
-  const s = (text || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 20);
-  return `n${i}_${s || i}`;
+    const s = (text || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 20);
+    return `n${i}_${s || i}`;
 }
 
 function buildMermaidDFD(stepsArray, containerWidthPx = 1200, minNodeWidth = 220) {
-  const steps = stepsArray.slice();
-  const nodesPerRow = Math.max(1, Math.floor(containerWidthPx / minNodeWidth));
+    const steps = stepsArray.slice();
+    const nodesPerRow = Math.max(1, Math.floor(containerWidthPx / minNodeWidth));
 
-  let mermaid = `flowchart LR\n  classDef process fill:#ffffff,stroke:#2563eb,stroke-width:2,rx:8,ry:8;\n  classDef stepLabel fill:#f8fafc,stroke:none;\n`;
+    let mermaid = `flowchart LR\n  classDef process fill:#ffffff,stroke:#6366f1,stroke-width:2,rx:8,ry:8;\n  classDef stepLabel fill:#f8fafc,stroke:none;\n`;
 
-  for (let r = 0; r < Math.ceil(steps.length / nodesPerRow); r++) {
-    const start = r * nodesPerRow;
-    const end = Math.min(steps.length, start + nodesPerRow);
-    mermaid += `  subgraph row${r} [ ]\n    direction LR\n`;
+    for (let r = 0; r < Math.ceil(steps.length / nodesPerRow); r++) {
+        const start = r * nodesPerRow;
+        const end = Math.min(steps.length, start + nodesPerRow);
+        mermaid += `  subgraph row${r} [ ]\n    direction LR\n`;
 
-    for (let i = start; i < end; i++) {
-      const id = nodeId(i, steps[i]);
-      const label = steps[i].replace(/\n/g, ' ').replace(/"/g, '\\"');
-      mermaid += `    ${id}["${label}"]:::process\n`;
+        for (let i = start; i < end; i++) {
+            const id = nodeId(i, steps[i]);
+            const label = steps[i].replace(/\n/g, ' ').replace(/"/g, '\\"');
+            mermaid += `    ${id}["${label}"]:::process\n`;
+        }
+
+        if (end - start >= 2) {
+            for (let i = start; i < end - 1; i++) {
+                mermaid += `    ${nodeId(i, steps[i])} --> ${nodeId(i + 1, steps[i + 1])}\n`;
+            }
+        }
+
+        mermaid += `  end\n\n`;
     }
 
-    if (end - start >= 2) {
-      for (let i = start; i < end - 1; i++) {
-        mermaid += `    ${nodeId(i, steps[i])} --> ${nodeId(i + 1, steps[i + 1])}\n`;
-      }
-    }
-
-    mermaid += `  end\n\n`;
-  }
-
-  return mermaid;
+    return mermaid;
 }
 
 async function renderMermaidDFD(input, containerSelector) {
-  const container = document.querySelector(containerSelector);
-  if (!container) return;
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
 
-  // 🧠 Extract DFD steps safely
-  const dfdData = extractDFDSteps(input)
-    .map(step => step.replace(/[^\w\s]/g, '').trim()) // remove invalid chars
-    .filter(step => step.length > 0);
-
-  if (dfdData.length < 2) {
-    container.innerHTML = "<p style='color:#888;'>No valid DFD detected</p>";
-    return;
-  }
-
-  // 🧩 Build a valid Mermaid diagram
-  const mermaidDefinition = `
-    graph TD
-    ${dfdData.map((step, i) => `A${i}["${step}"]`).join('\n')}
-    ${dfdData.map((_, i, arr) => (i < arr.length - 1 ? `A${i} --> A${i + 1}` : '')).join('\n')}
-  `;
-
-  // 🎨 Insert Mermaid container (compact layout)
-  container.innerHTML = `
-    <div class="mermaid" style="
-      width: 100%;
-      max-width: 600px;
-      margin: 10px auto;
-      background: #f9fafc;
-      border-radius: 10px;
-      padding: 10px;
-      overflow-x: auto;
-      transform: scale(0.85);
-      transform-origin: top left;
-      font-size: 11px;
-    ">
-      ${mermaidDefinition}
-    </div>
-  `;
-
-  // ⚙️ Render Mermaid safely
-  if (window.mermaid) {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "neutral",
-      themeVariables: {
-        primaryColor: "#eef3fc",
-        edgeLabelBackground: "#fff",
-        fontSize: "11px",
-        nodeBorder: "#888",
-        lineColor: "#999"
-      },
-    });
-
-    const mermaidDiv = container.querySelector('.mermaid');
-    try {
-      const { svg } = await mermaid.render(`dfd-${Date.now()}`, mermaidDefinition);
-      mermaidDiv.innerHTML = svg;
-    } catch (err) {
-      console.error("Mermaid render error:", err);
-      container.innerHTML = "<p style='color:red;'>⚠️ Unable to render DFD</p>";
+    // Check if DFD is enabled in settings
+    const showDFD = document.getElementById('showDFD');
+    if (showDFD && !showDFD.checked) {
+        container.style.display = 'none';
+        return;
     }
-  }
+
+    const dfdData = extractDFDSteps(input)
+        .map(step => step.replace(/[^\w\s]/g, '').trim())
+        .filter(step => step.length > 0);
+
+    if (dfdData.length < 2) {
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 20px;">
+            <i class="fa-solid fa-diagram-project"></i> No valid DFD detected
+        </p>`;
+        return;
+    }
+
+    const mermaidDefinition = `
+        graph TD
+        ${dfdData.map((step, i) => `A${i}["${step}"]`).join('\n')}
+        ${dfdData.map((_, i, arr) => (i < arr.length - 1 ? `A${i} --> A${i + 1}` : '')).join('\n')}
+    `;
+
+    container.innerHTML = `
+        <div class="dfd-header">
+            <span><i class="fa-solid fa-diagram-project"></i> Process Flow Diagram</span>
+            <button class="dfd-copy-btn" onclick="copyDFD(this)">
+                <i class="fa-solid fa-copy"></i> Copy
+            </button>
+        </div>
+        <div class="mermaid">${mermaidDefinition}</div>
+    `;
+
+    if (window.mermaid) {
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: "base",
+            themeVariables: {
+                primaryColor: "#6366f1",
+                primaryTextColor: "#1e293b",
+                primaryBorderColor: "#6366f1",
+                lineColor: "#8b5cf6",
+                secondaryColor: "#f1f5f9",
+                tertiaryColor: "#e0e7ff",
+                fontSize: "14px",
+                fontFamily: "Inter, sans-serif"
+            },
+        });
+
+        const mermaidDiv = container.querySelector('.mermaid');
+        try {
+            const { svg } = await mermaid.render(`dfd-${Date.now()}`, mermaidDefinition);
+            mermaidDiv.innerHTML = svg;
+        } catch (err) {
+            console.error("Mermaid render error:", err);
+            container.innerHTML = `<p style="color: var(--error); text-align: center; padding: 20px;">
+                <i class="fa-solid fa-exclamation-triangle"></i> Unable to render DFD
+            </p>`;
+        }
+    }
 }
 
+function copyDFD(btn) {
+    const container = btn.closest('.ai-dfd-part') || btn.closest('.dfd-container');
+    const svg = container.querySelector('svg');
+    if (svg) {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        navigator.clipboard.writeText(svgData).then(() => {
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy';
+            }, 2000);
+        });
+    }
+}
 
-
+// ===== DOM ELEMENTS =====
 
 const chatContainer = document.getElementById('chatContainer');
 const inputField = document.getElementById('userInput');
@@ -138,321 +159,319 @@ const historyBtn = document.getElementById('historyBtn');
 const sidebar = document.getElementById('SideBar');
 const historyList = document.getElementById('historyList');
 const micBtn = document.getElementById("micBtn");
-const userInput = document.getElementById("userInput");
 const themeToggle = document.getElementById("themeToggle");
-
-const body = document.body;
-
-
 const clearHistoryBtn = document.getElementById("clearHistory");
 const sortSelect = document.getElementById("sortHistory");
 const searchInput = document.getElementById("searchHistory");
+const sendBtn = document.getElementById("sendBtn");
+const refreshBtn = document.getElementById("refreshBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsModal = document.getElementById("settingsModal");
+const closeSidebar = document.getElementById("closeSidebar");
+const fileIndicator = document.getElementById("fileIndicator");
+const fileName = document.getElementById("fileName");
+const removeFileBtn = document.getElementById("removeFile");
+const globalSearch = document.getElementById("globalSearch");
+const welcomeCard = document.getElementById("welcomeCard");
+const exportHistoryBtn = document.getElementById("exportHistory");
 
+// ===== STATE VARIABLES =====
 
 let chatHistory = [];
 let filteredHistory = [];
-let debounceTimer = null;
+let selectedFile = null;
+let isRecording = false;
+let currentTheme = localStorage.getItem('theme') || 'dark';
 
-// ✅ Load all history once (no query)
-async function loadChatHistory() {
-  try {
-    const res = await fetch("http://localhost:8080/history");
-    if (!res.ok) throw new Error("Failed to load history");
-    chatHistory = await res.json();
-    filteredHistory = [...chatHistory];
-    applySortingAndRender();
-  } catch (err) {
-    console.error("Server fetch error:", err);
-    historyList.innerHTML = "<p style='color:red;text-align:center;'>⚠️ Unable to load history</p>";
-  }
+// ===== INITIALIZATION =====
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+});
+
+function initializeApp() {
+    // Apply saved theme
+    applyTheme(currentTheme);
+
+    // Load chat history
+    loadChatHistory();
+
+    // Setup event listeners
+    setupEventListeners();
+
+    // Initialize Mermaid
+    if (window.mermaid) {
+        mermaid.initialize({ startOnLoad: false });
+    }
+
+    // Show welcome message
+    console.log('%c🚀 AI ERP Assistant Initialized', 'color: #6366f1; font-size: 16px; font-weight: bold;');
 }
 
-// ✅ Render
-function renderHistory(list) {
-  historyList.innerHTML = "";
-  if (!list.length) {
-    historyList.innerHTML = "<p style='text-align:center;color:#666;'>No results</p>";
-    return;
-  }
-  list.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "history-item";
-    div.innerHTML = `<span><b>${item.topic || "General"}</b> — ${item.text}</span>
-                     <button class="delete-btn" title="Remove from view">🗑️</button>`;
-    div.querySelector(".delete-btn").addEventListener("click", async () => {
-      div.remove();
-      filteredHistory = filteredHistory.filter(h => h.id !== item.id);
+function setupEventListeners() {
+    // Send message
+    sendBtn?.addEventListener('click', sendToAI);
+    inputField?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendToAI();
+        }
     });
-    historyList.appendChild(div);
-  });
+
+    // File handling
+    addFilesButton?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', handleFileSelect);
+    removeFileBtn?.addEventListener('click', removeSelectedFile);
+
+    // Sidebar
+    historyBtn?.addEventListener('click', toggleSidebar);
+    closeSidebar?.addEventListener('click', () => sidebar?.classList.remove('active'));
+
+    // History controls
+    searchInput?.addEventListener('input', handleHistorySearch);
+    sortSelect?.addEventListener('change', applySortingAndRender);
+    clearHistoryBtn?.addEventListener('click', handleClearHistory);
+    exportHistoryBtn?.addEventListener('click', exportHistory);
+
+    // Theme toggle
+    themeToggle?.addEventListener('click', toggleTheme);
+
+    // Refresh
+    refreshBtn?.addEventListener('click', () => location.reload());
+
+    // Settings
+    settingsBtn?.addEventListener('click', () => settingsModal?.classList.add('active'));
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            settingsModal?.classList.remove('active');
+        });
+    });
+
+    // Quick actions
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const query = btn.dataset.query;
+            if (query) {
+                inputField.value = query;
+                sendToAI();
+            }
+        });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+
+    // Click outside to close
+    document.addEventListener('click', (e) => {
+        if (sidebar?.classList.contains('active') &&
+            !sidebar.contains(e.target) &&
+            !historyBtn?.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+        if (settingsModal?.classList.contains('active') &&
+            !settingsModal.querySelector('.modal-content').contains(e.target) &&
+            !settingsBtn?.contains(e.target)) {
+            settingsModal.classList.remove('active');
+        }
+    });
+
+    // Voice input
+    setupVoiceRecognition();
 }
 
-// ✅ Sorting
+// ===== KEYBOARD SHORTCUTS =====
+
+function handleKeyboardShortcuts(e) {
+    // Ctrl/Cmd + K - Focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        globalSearch?.focus();
+    }
+    // Ctrl/Cmd + M - Toggle mic
+    if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
+        e.preventDefault();
+        micBtn?.click();
+    }
+    // Ctrl/Cmd + U - Upload file
+    if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+        e.preventDefault();
+        fileInput?.click();
+    }
+    // Escape - Close modals/sidebar
+    if (e.key === 'Escape') {
+        sidebar?.classList.remove('active');
+        settingsModal?.classList.remove('active');
+    }
+}
+
+// ===== THEME HANDLING =====
+
+function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(currentTheme);
+    localStorage.setItem('theme', currentTheme);
+}
+
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-theme');
+        themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+    } else {
+        document.body.classList.remove('light-theme');
+        themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+    }
+}
+
+// ===== FILE HANDLING =====
+
+function handleFileSelect(e) {
+    if (e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        fileName.textContent = selectedFile.name;
+        fileIndicator.style.display = 'flex';
+        showToast('success', 'File attached', selectedFile.name);
+    }
+}
+
+function removeSelectedFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    fileIndicator.style.display = 'none';
+}
+
+// ===== CHAT HISTORY (PRESERVED LOGIC) =====
+
+async function loadChatHistory() {
+    try {
+        const res = await fetch("http://localhost:8080/history");
+        if (!res.ok) throw new Error("Failed to load history");
+        chatHistory = await res.json();
+        filteredHistory = [...chatHistory];
+        applySortingAndRender();
+    } catch (err) {
+        console.error("Server fetch error:", err);
+        historyList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-inbox" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+                <p>No history available</p>
+            </div>
+        `;
+    }
+}
+
+function renderHistory(list) {
+    historyList.innerHTML = "";
+    if (!list.length) {
+        historyList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-search" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+                <p>No results found</p>
+            </div>
+        `;
+        return;
+    }
+
+    list.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+
+        const date = item.date ? new Date(item.date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : '';
+
+        div.innerHTML = `
+            <strong>${item.topic || item.query || "General"}</strong>
+            <small>${item.text || date}</small>
+            <button class="delete-btn" title="Remove">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        `;
+
+        div.querySelector(".delete-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            div.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => {
+                div.remove();
+                filteredHistory = filteredHistory.filter(h => h.id !== item.id);
+            }, 300);
+        });
+
+        div.addEventListener("click", () => {
+            showChat(item.query, item.response);
+            sidebar?.classList.remove('active');
+        });
+
+        historyList.appendChild(div);
+    });
+}
+
 function applySorting(list) {
-  const sorted = [...list];
-  if (sortSelect.value === "date") {
-    sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-  } else if (sortSelect.value === "topic") {
-    sorted.sort((a, b) => (a.topic || "").localeCompare(b.topic || ""));
-  }
-  return sorted;
+    const sorted = [...list];
+    if (sortSelect?.value === "date") {
+        sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (sortSelect?.value === "topic") {
+        sorted.sort((a, b) => (a.topic || "").localeCompare(b.topic || ""));
+    }
+    return sorted;
 }
 
 function applySortingAndRender() {
-  renderHistory(applySorting(filteredHistory));
+    renderHistory(applySorting(filteredHistory));
 }
 
-// ✅ Fixed Search (Client-side only)
-searchInput.addEventListener("input", () => {
-  const query = searchInput.value.trim().toLowerCase();
+function handleHistorySearch() {
+    const query = searchInput.value.trim().toLowerCase();
 
-  if (query === "") {
-    filteredHistory = [...chatHistory]; // show all again
-  } else {
-    filteredHistory = chatHistory.filter(item =>
-      (item.text && item.text.toLowerCase().includes(query)) ||
-      (item.topic && item.topic.toLowerCase().includes(query))
-    );
-  }
-
-  applySortingAndRender(); // re-render only matches
-});
-
-sortSelect.addEventListener("change", () => {
-  applySortingAndRender();
-});
-
-// initial load
-loadChatHistory();
-
-// 🗑️ Clear All (Frontend Only)
-clearHistoryBtn.addEventListener("click", () => {
-  if (confirm("Clear all chat history from view?")) {
-    historyList.innerHTML = "";
-  }
-});
-
-// 🚀 Load on Startup
-loadChatHistory();
-
-let selectedFile = null;
-
-// 📂 File upload
-addFilesButton.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', (e) => {
-  if (e.target.files.length > 0) {
-    selectedFile = e.target.files[0];
-    appendMessage('user', `📎 Selected file: ${selectedFile.name}`);
-  }
-});
-
-// 🧠 Send to AI
-async function sendToAI() {
-  const query = inputField.value.trim();
-  if (!query && !selectedFile) return;
-
-  if (query) appendMessage('user', query);
-  inputField.value = '';
-
-  const thinkingMessage = appendMessage('ai', '<span class="typing"><span></span><span></span><span></span></span>');
-
-  try {
-    let res;
-    if (selectedFile) {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('query', query);
-      res = await fetch("http://localhost:8080/api/ai/ask-file", { method: "POST", body: formData });
-      selectedFile = null;
+    if (query === "") {
+        filteredHistory = [...chatHistory];
     } else {
-      res = await fetch("http://localhost:8080/api/ai/ask", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: query
-      });
+        filteredHistory = chatHistory.filter(item =>
+            (item.text && item.text.toLowerCase().includes(query)) ||
+            (item.topic && item.topic.toLowerCase().includes(query)) ||
+            (item.query && item.query.toLowerCase().includes(query))
+        );
     }
 
-    const text = await res.text();
-        thinkingMessage.remove();
-        appendMessage('ai', text, true);
-        saveQueryToDB(query, text);
-        speakAIResponse(text);
-      } catch (error) {
-        thinkingMessage.remove();
-        appendMessage('ai', "⚠️ Error connecting to server: " + error.message);
-      }
+    applySortingAndRender();
 }
 
-// 💾 Save to DB
-async function saveQueryToDB(query, response) {
-  try {
-    await fetch("http://localhost:8080/api/ai/save-query", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ userName: "User", queryText: query, responseText: response })
-    });
-  } catch (e) {
-    console.error("Error saving query:", e);
-  }
+function handleClearHistory() {
+    if (confirm("Are you sure you want to clear all chat history?")) {
+        historyList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-inbox" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+                <p>History cleared</p>
+            </div>
+        `;
+        chatHistory = [];
+        filteredHistory = [];
+        showToast('success', 'History cleared', 'All conversations have been removed');
+    }
 }
 
-// 🗂️ Load history (sidebar)
-historyBtn.addEventListener('click', async () => {
-  sidebar.classList.toggle('active');
-  if (sidebar.classList.contains('active')) await loadHistory();
-});
-
-async function loadHistory() {
-  historyList.innerHTML = "<p>Loading...</p>";
-  try {
-    const res = await fetch("http://localhost:8080/api/ai/history");
-    const data = await res.json();
-    historyList.innerHTML = "";
-    if (data.length === 0) {
-      historyList.innerHTML = "<p>No history found</p>";
-      return;
+function exportHistory() {
+    if (chatHistory.length === 0) {
+        showToast('warning', 'No history', 'There is no history to export');
+        return;
     }
 
-    data.slice().reverse().forEach(item => {
-      const div = document.createElement("div");
-      div.className = "history-item";
-
-      const time = new Date(item.timestamp);
-      const formatted = time.toLocaleString("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short"
-      });
-
-      div.innerHTML = `
-        <strong>${item.query}</strong><br>
-        <small>${formatted}</small>
-      `;
-
-      div.addEventListener("click", () =>
-        showChat(item.query, item.response, formatted)
-      );
-
-      historyList.appendChild(div);
-    });
-  } catch (err) {
-    historyList.innerHTML = "<p>Error loading history</p>";
-  }
+    const dataStr = JSON.stringify(chatHistory, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-history-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('success', 'Exported', 'Chat history downloaded successfully');
 }
 
-
-function showChat(query, response) {
-  chatContainer.innerHTML = "";
-  appendMessage('user', query);
-  appendMessage('ai', response, true);
-}
-// 💬 Append message (Updated for AI DFD)
-function appendMessage(role, message, markdown = false) {
-  const div = document.createElement("div");
-  div.className = `message ${role}`;
-
-  if (role === "ai") {
-    const dfdSteps = extractDFDSteps(message);
-
-    const responseBlock = document.createElement("div");
-    responseBlock.className = "ai-response-block";
-
-    const textPart = document.createElement("div");
-    textPart.className = "ai-text-part";
-    textPart.innerHTML = `
-      <div class="message-content">
-        ${markdown ? marked.parse(message) : message}
-        <button class="copy-btn" onclick="copyText(this)">
-          <i class="fas fa-copy"></i> Copy
-        </button>
-      </div>`;
-
-    const dfdPart = document.createElement("div");
-    dfdPart.className = "ai-dfd-part";
-
-    if (dfdSteps.length > 1) {
-      const dfdContainer = document.createElement("div");
-      dfdContainer.id = "myDfdContainer_" + Date.now();
-      dfdContainer.className = "dfd-container";
-      dfdPart.appendChild(dfdContainer);
-
-      setTimeout(() => renderMermaidDFD(message, `#${dfdContainer.id}`), 200);
+function toggleSidebar() {
+    sidebar?.classList.toggle('active');
+    if (sidebar?.classList.contains('active')) {
+        loadChatHistory();
     }
-
-    responseBlock.appendChild(textPart);
-    responseBlock.appendChild(dfdPart);
-    div.appendChild(responseBlock);
-  } else {
-    div.innerHTML = `<div class="message-content">${message}</div>`;
-  }
-
-  chatContainer.appendChild(div);
-  chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: "smooth" });
-  return div;
 }
-
-
-
-function copyText(button) {
-  const text = button.parentElement.innerText.replace("Copy", "").trim();
-  navigator.clipboard.writeText(text).then(() => {
-    button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-    button.classList.add("copied");
-    setTimeout(() => {
-      button.innerHTML = '<i class="fas fa-copy"></i> Copy';
-      button.classList.remove("copied");
-    }, 1500);
-  });
-}
-
-// 🎤 MIC + SPEECH SYSTEM
-let recognition;
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.lang = 'en-IN';
-  recognition.interimResults = false;
-
-  micBtn.addEventListener('click', () => {
-    recognition.start();
-    micBtn.innerText = '🎧 Listening...';
-  });
-
-  recognition.onresult = async (event) => {
-    const voiceQuery = event.results[0][0].transcript;
-    micBtn.innerText = '🎤 Speak';
-    appendMessage('user', `🎤 ${voiceQuery}`);
-    inputField.value = voiceQuery;
-    sendToAI();
-  };
-
-  recognition.onerror = () => {
-    micBtn.innerText = '🎤 Speak';
-  };
-} else {
-  micBtn.disabled = true;
-  micBtn.innerText = "🎤 Not Supported";
-}
-
-// 🎤 AI speech
-function speakAIResponse(text) {
-  let sentences = text.split(/[.!?]/).filter(s => s.trim().length > 0);
-  let shortResponse = sentences.slice(0, 2).join('. ') + '.';
-  const utterance = new SpeechSynthesisUtterance(shortResponse);
-  utterance.lang = 'en-IN';
-  utterance.pitch = 1.1;
-  utterance.rate = 1;
-  utterance.volume = 1;
-  const voices = window.speechSynthesis.getVoices();
-  const indianVoice = voices.find(v => v.name.includes('Google') && v.lang === 'en-IN');
-  if (indianVoice) utterance.voice = indianVoice;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-}
-
-inputField.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendToAI();
-});
-
-
-
-
